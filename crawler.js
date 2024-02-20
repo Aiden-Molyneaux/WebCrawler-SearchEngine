@@ -31,10 +31,10 @@ function createCrawler(url, dbName, lim, numInQueue, globalPageOb, globalLinkedB
                     let body = $(".mw-page-container-inner");
                     let paragraphs = body.find('p');
 
-                    bodyText = ""
+                    bodyText = "";
                     paragraphs.each((index, element) => {
                         bodyText += $(element).text().replace(/[^'a-zA-Z]/g, ' ');
-                    })
+                    });
 
                     let newWords = bodyText.match(/\b\w+\b/g);
                     bodyText = newWords.join('\n');
@@ -66,7 +66,7 @@ function createCrawler(url, dbName, lim, numInQueue, globalPageOb, globalLinkedB
                     if (dbName == "fruits" && !globalFruitsQueue.includes(childURL)) {
                         c.queue(childURL);
                         numInQueue++;
-                        globalFruitsQueue.push(childURL)
+                        globalFruitsQueue.push(childURL);
                     }
                     
                     if (dbName == "personal" && numInQueue < lim-1 && !globalPageOb[childURL] && !linksArr.includes(childURL)) {
@@ -75,7 +75,7 @@ function createCrawler(url, dbName, lim, numInQueue, globalPageOb, globalLinkedB
                     }
                     
                     linksArr.push(childURL);
-                };
+                }
 
                 globalPageOb[currentURL] = {
                     url: currentURL,
@@ -93,7 +93,7 @@ function createCrawler(url, dbName, lim, numInQueue, globalPageOb, globalLinkedB
 }
 
 function addPages(pages) {
-    req = new XMLHttpRequest();
+    let req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if (req.readyState == 4 && req.status == 200) {
             console.log("Page added!");
@@ -121,7 +121,7 @@ fruitCrawler.on('drain', function() {
     }
 
     if (pagesToUpdate.length > 0) {
-        addPages(pagesToUpdate)
+        addPages(pagesToUpdate);
     }
 });
 
@@ -134,12 +134,12 @@ personalCrawler.on('drain', async function() {
     let pagesToUpdate = [];
 
     for (const [key, value] of Object.entries(globalPersonalPageOb)) {
-        globalPersonalPageOb[key].linkedBy = globalPersonalLinkedBy[key]
-        pagesToUpdate.push(globalPersonalPageOb[key])
+        globalPersonalPageOb[key].linkedBy = globalPersonalLinkedBy[key];
+        pagesToUpdate.push(globalPersonalPageOb[key]);
     }
 
     if (pagesToUpdate.length > 0) {
-        addPages(pagesToUpdate)
+        addPages(pagesToUpdate);
     }
 });
 

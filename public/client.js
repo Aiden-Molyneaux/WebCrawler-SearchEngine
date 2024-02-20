@@ -15,14 +15,14 @@ function search() {
                 let entry = document.createElement("li");
                 entry.style.display = "block";
 
-                let pageTitle
+                let pageTitle;
                 if (dataSet == "fruits") {
                     pageTitle = String(page.ref.slice(57, -5));
                 } else {
                     pageTitle = String(page.ref.slice(30).replace(/_/g, " ").replace(/%27/g, "'"));
                 }
 
-                newHTML = document.createElement("div");
+                const newHTML = document.createElement("div");
                 newHTML.classList.add("list-item");
                 newHTML.innerHTML = `<div class="outerclass"><div class="innerclass2"><b>S:</b> ${page.score}<br><b>PR</b>: ${page.pr}<br></div><div class="innerclass1"><b>Title:</b> ${pageTitle}</b><br><button class="link" onclick="linkClick('${pageTitle}')">${page.ref}</button><br></div></div>`;
 
@@ -41,40 +41,39 @@ function search() {
     req.send();
 }
 
-function linkClick (param) {
-    console.log(param)
+function linkClick(param) {
     req = new XMLHttpRequest();
     req.onreadystatechange = function() {
         if (req.readyState == 4 && req.status == 200) {
-            let page = JSON.parse(req.responseText)
+            let page = JSON.parse(req.responseText);
 
             let resultDiv = document.getElementById("searchResults");
             resultDiv.textContent = '';
 
-            newHTML = document.createElement("div")
-            newHTML.classList.add('outerclass')
+            const newHTML = document.createElement("div");
+            newHTML.classList.add('outerclass');
 
-            newHTML.innerHTML = ``
-            newHTML.innerHTML = `<b>${page.title}</b>`
+            newHTML.innerHTML = ``;
+            newHTML.innerHTML = `<b>${page.title}</b>`;
 
-            newHTML.innerHTML += `<br><br><b>Incoming links to this page:</b>`
+            newHTML.innerHTML += `<br><br><b>Incoming links to this page:</b>`;
             for (let incomingLink of page.linkedBy) {
-                newHTML.innerHTML += `<br>${incomingLink}`
+                newHTML.innerHTML += `<br>${incomingLink}`;
             }
 
-            newHTML.innerHTML += `<br><br><b>This page links to:</b>`
+            newHTML.innerHTML += `<br><br><b>This page links to:</b>`;
             for (let outgoingLink of page.linksTo) {
-                newHTML.innerHTML += `<br>${outgoingLink}`
+                newHTML.innerHTML += `<br>${outgoingLink}`;
             }
 
-            newHTML.innerHTML += `<br><br><b>The word frequency of this page is:</b>`
+            newHTML.innerHTML += `<br><br><b>The word frequency of this page is:</b>`;
             for (let wordCount of page.wordsAndCounts) {
-                newHTML.innerHTML += `<br>${wordCount[0]} occurred ${wordCount[1]} times`
+                newHTML.innerHTML += `<br>${wordCount[0]} occurred ${wordCount[1]} times`;
             }
 
-            newHTML.innerHTML = `<div class="outerclass>"` + newHTML.innerHTML + `</div>`
+            newHTML.innerHTML = `<div class="outerclass>"` + newHTML.innerHTML + `</div>`;
 
-            resultDiv.appendChild(newHTML)
+            resultDiv.appendChild(newHTML);
         } 
         else if (this.readyState == 4 && this.status == 500) {
             alert("The server broke.");
@@ -82,5 +81,5 @@ function linkClick (param) {
     }
 
     req.open("GET", `http://localhost:3000/pages?title=${param}`, true);
-    req.send()
+    req.send();
 }

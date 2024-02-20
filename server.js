@@ -1,7 +1,7 @@
 const express = require('express');
 const mc = require("mongodb").MongoClient;
-const elasticlunr = require("elasticlunr")
-const {Matrix} = require("ml-matrix")
+const elasticlunr = require("elasticlunr");
+const {Matrix} = require("ml-matrix");
 const axios = require('axios');
 
 const app = express();
@@ -54,7 +54,7 @@ app.get("/fruits", async function(req, res, next) {
     }
 
     // get pageRanks for fruits
-    const pageRanksArray = fruitsPageRanksUrls
+    const pageRanksArray = fruitsPageRanksUrls;
 
     // search fruit index with query
     let pages = fruitsIndex.search(q, {});
@@ -63,26 +63,24 @@ app.get("/fruits", async function(req, res, next) {
     if (boost == "true") {
         const result = pages.map((pageEntry) => {
             const [pageRank, ref] = pageRanksArray.find(([score, r]) => r === pageEntry.ref);
-            return { ref, score: pageEntry.score * pageRank}
+            return { ref, score: pageEntry.score * pageRank};
         })
     
         pages = result.sort(function(a, b) {return a.score - b.score}).reverse()
     }
 
     // limit number of returned pages
-    pages = pages.slice(0, limit)
+    pages = pages.slice(0, limit);
     
     // combine index search results (partial pages) with full page entities from database
     const client = await mc.connect("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
     let db = client.db('crawlerLoot');
 
-    let newPages = []
+    let newPages = [];
     for (let page of pages) {
         const result = await db.collection("fruits").findOne({url: { $regex: new RegExp(page.ref, "i") }});
 
-        if (!result) {
-            continue
-        }
+        if (!result) { continue; }
 
         let newPage = {
             ...page,
@@ -90,7 +88,7 @@ app.get("/fruits", async function(req, res, next) {
             title: result.title,
             pr: result.pageRank,
             name: "Group Members: Aiden Molyneaux & Patrick Kye Foley"
-        }
+        };
 
         newPages.push(newPage);
     }
@@ -98,12 +96,12 @@ app.get("/fruits", async function(req, res, next) {
     // grab additional pages in the event where index search does not return limit number items
     // (done same as above)
     if (newPages.length != limit) {
-        let pages = fruitsIndex.search("apple", {}).slice(0, 100)
+        let pages = fruitsIndex.search("apple", {}).slice(0, 100);
 
         for (let page of pages) {
             const result = await db.collection("fruits").findOne({url: { $regex: new RegExp(page.ref, "i") }});
 
-            if (!result) {continue}
+            if (!result) { continue; }
 
             let newPage = {
                 ...page,
@@ -111,25 +109,24 @@ app.get("/fruits", async function(req, res, next) {
                 title: result.title,
                 pr: result.pageRank,
                 name: "Group Members: Aiden Molyneaux & Patrick Kye Foley"
-            }
+            };
     
             if (newPages.length < limit) {
                 newPages.push(newPage);
             } else {
                 break
             }
-            
         }
     }
 
     // send results
-    client.close()
+    client.close();
     res.status(200).json(newPages);
 })
 
 // standard gets to personal collection
 app.get("/personal", async function(req, res, next) {
-    if(req.url == "/personal") {
+    if (req.url == "/personal") {
         const client = await mc.connect("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
         const db = client.db('crawlerLoot');
 
@@ -143,25 +140,25 @@ app.get("/personal", async function(req, res, next) {
     let queryParts = extractQueries(req.url);
     let { q, boost, limit, url } = queryParts;
     
-    if(!limit || limit < 1 || limit > 50) {
+    if (!limit || limit < 1 || limit > 50) {
         limit = 10;
     }
 
-    const pageRanksArray = personalPageRanksUrls
+    const pageRanksArray = personalPageRanksUrls;
 
-    let pages = personalIndex.search(q, {})
+    let pages = personalIndex.search(q, {});
 
     if (boost == "true") {
         const result = pages.map((pageEntry) => {
             const [pageRank, ref] = pageRanksArray.find(([score, r]) => r === pageEntry.ref);
-            return { ref, score: pageEntry.score * pageRank}
-        })
+            return { ref, score: pageEntry.score * pageRank};
+        });
     
-        pages = result.sort(function(a, b) {return a.score - b.score}).reverse()
+        pages = result.sort(function(a, b) {return a.score - b.score}).reverse();
     }
 
-    pages = pages.slice(0, limit)
-    let newPages = []
+    pages = pages.slice(0, limit);
+    let newPages = [];
     const client = await mc.connect("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
 
     let db = client.db('crawlerLoot');
@@ -169,9 +166,7 @@ app.get("/personal", async function(req, res, next) {
     for (let page of pages) {
         const result = await db.collection("personal").findOne({url: { $regex: new RegExp(page.ref, "i") }});
 
-        if (!result) {
-            continue
-        }
+        if (!result) { continue; }
 
         let newPage = {
             ...page,
@@ -179,18 +174,18 @@ app.get("/personal", async function(req, res, next) {
             title: result.title,
             pr: result.pageRank,
             name: "Group Members: Aiden Molyneaux & Patrick Kye Foley"
-        }
+        };
 
         newPages.push(newPage);
     }
     
     if (newPages.length != limit) {
-        let pages = personalIndex.search("school", {}).slice(0, 100)
+        let pages = personalIndex.search("school", {}).slice(0, 100);
 
         for (let page of pages) {
             const result = await db.collection("personal").findOne({url: { $regex: new RegExp(page.ref, "i") }});
 
-            if (!result) {continue}
+            if (!result) { continue; }
 
             let newPage = {
                 ...page,
@@ -198,70 +193,68 @@ app.get("/personal", async function(req, res, next) {
                 title: result.title,
                 pr: result.pageRank,
                 name: "Group Members: Aiden Molyneaux & Patrick Kye Foley"
-            }
+            };
     
             if (newPages.length < limit) {
                 newPages.push(newPage);
             } else {
-                break
+                break;
             }
         }
     }
 
-    client.close()
+    client.close();
     res.status(200).json(newPages);
 })
 
 // standard gets to pages - client requesting more data about one page resource
 app.get("/pages", async function(req, res) {
     // get the title of the requested page
-    let pageTitle = req.url.split("?")[1].split("=")[1]
+    let pageTitle = req.url.split("?")[1].split("=")[1];
 
     // connect to database
-    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true})
+    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
     try {
-        await client.connect()
+        await client.connect();
 
         // try getting the page from the fruits collection
-        let page = await client.db('crawlerLoot').collection('fruits').findOne({title: pageTitle})
-        let personal = false
+        let page = await client.db('crawlerLoot').collection('fruits').findOne({title: pageTitle});
+        let personal = false;
 
         // if a page isn't found, pull one from personal collection
         if (!page) {
             // page titles are different if on personal collection
-            pageTitle = pageTitle.replace(/%20/g, " ").replace(/%27/g, "'") + " - Wikipedia"
+            pageTitle = pageTitle.replace(/%20/g, " ").replace(/%27/g, "'") + " - Wikipedia";
 
-            personal = true
-            page = await client.db('crawlerLoot').collection('personal').findOne({title: pageTitle})
+            personal = true;
+            page = await client.db('crawlerLoot').collection('personal').findOne({title: pageTitle});
         }
 
         // get all words from page into an array
-        let allWords = []
-        let pageWords = page.body.split("\n")
+        let allWords = [];
+        let pageWords = page.body.split("\n");
 
         // handle specially if on personal collection
         if (personal) {
             for (let placeholder of pageWords) {
-                placeholder.replace(/[^a-zA-Z]/g, '')
-                allWords.push(placeholder.split(" "))
+                placeholder.replace(/[^a-zA-Z]/g, '');
+                allWords.push(placeholder.split(" "));
             }
         } else {
-            allWords = pageWords
+            allWords = pageWords;
         }
 
         // get all words and their frequency counts into an array
-        let wordsAndCounts = []
+        let wordsAndCounts = [];
 
         if (personal) {
             for await (let wordArr of allWords) {
                 for await (let word of wordArr) {
                     // skip any empty strings
-                    if (word == "") {
-                        continue
-                    }
+                    if (word == "") { continue; }
         
                     // assume this word has not been seen
-                    let wordPresent = false
+                    let wordPresent = false;
         
                     // check if this word has been seen
                     for (let wordCount of wordsAndCounts) {
@@ -273,63 +266,61 @@ app.get("/pages", async function(req, res) {
         
                     // if this word has not been seen, make a new entry
                     if (!wordPresent) {
-                        wordsAndCounts.push([word, 1])
+                        wordsAndCounts.push([word, 1]);
                     }
                 }
             }
         } else {
             for await (let word of allWords) {
                 // skip any empty strings
-                if (word == "") {
-                    continue
-                }
+                if (word == "") { continue; }
     
                 // assume this word has not been seen
-                let wordPresent = false
+                let wordPresent = false;
     
                 // check if this word has been seen
                 for (let wordCount of wordsAndCounts) {
                     if (word == wordCount[0]) {
-                        wordCount[1] += 1
-                        wordPresent = true
+                        wordCount[1] += 1;
+                        wordPresent = true;
                     }
                 }
     
                 // if this word has not been seen, make a new entry
                 if (!wordPresent) {
-                    wordsAndCounts.push([word, 1])
+                    wordsAndCounts.push([word, 1]);
                 }
             }
         }
 
         // sort wordCounts by frequency
-        wordsAndCounts.sort(function(a, b) {return a[1] - b[1]}).reverse()
+        wordsAndCounts.sort(function(a, b) {return a[1] - b[1]}).reverse();
 
         // add wordCounts to page and send
-        page.wordsAndCounts = wordsAndCounts
-        res.status(200).json(page)
+        page.wordsAndCounts = wordsAndCounts;
+        res.status(200).json(page);
     } finally {
-        client.close()
+        client.close();
     }
 })
 
 // Add page data to database
 app.post("/fruits", addPages);
-app.post("/personal", addPages)
+app.post("/personal", addPages);
 async function addPages(req, res, next) {
     // get pages from request
-    let pages = req.body
-    let result
+    let pages = req.body;
+    let result;
 
     // connect to database
-    const client = mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true})
+    const client = mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
     try {
         console.log("DB LOG (connected) - posting a page resource.");
-        await client.connect()
+        await client.connect();
         
         // Select the database collection by name and insert many pages
         let db = client.db('crawlerLoot');
-        result = await db.collection(pages[0].dbName).insertMany(pages)
+        result = await db.collection(pages[0].dbName).insertMany(pages);
     } finally {
         client.close();
         res.status(200).json(result);
@@ -371,65 +362,65 @@ function extractQueries(url){
 
 // helper to pageRank
 function euclidean(A, B) {
-    let total = 0
+    let total = 0;
     for (let i = 0; i < A.columns; i++) {
-        total += (A.get(0, i) - B.get(0, i))**2
+        total += (A.get(0, i) - B.get(0, i))**2;
     }
 
-    return Math.sqrt(total)
+    return Math.sqrt(total);
 }
 
 // compute and return pageRanks by collection name
 async function pageRank(collectionName) {
     // starting adjacency matrix
-    let basicAdjMat = []
+    let basicAdjMat = [];
     // num pages
-    let N = 0
+    let N = 0;
     // grab all urls in order as we do this - combined with pageRank before sorting
-    let urlsInOrder = []
+    let urlsInOrder = [];
 
     // build basic adjacency matrix with Ai,j = 1 if page i links to page j
-    console.log("Creating adjacency matrix...")
-    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true}, {useUnifiedTopology: true})
+    console.log("Creating adjacency matrix...");
+    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true}, {useUnifiedTopology: true});
     try {
-        await client.connect()
-        const outerPageCursor = client.db('crawlerLoot').collection(collectionName).find()
+        await client.connect();
+        const outerPageCursor = client.db('crawlerLoot').collection(collectionName).find();
 
         for await (const page of outerPageCursor) {
-            let row = []
-            const innerPageCursor = client.db('crawlerLoot').collection(collectionName).find()
+            let row = [];
+            const innerPageCursor = client.db('crawlerLoot').collection(collectionName).find();
             
             for await (const childPage of innerPageCursor) {
-                (page.linksTo.includes(childPage.url)) ? row.push(1) : row.push(0)
+                (page.linksTo.includes(childPage.url)) ? row.push(1) : row.push(0);
             }
 
-            basicAdjMat.push(row)
-            urlsInOrder.push(page.url)
-            N += 1
+            basicAdjMat.push(row);
+            urlsInOrder.push(page.url);
+            N += 1;
         }
     } finally {
-        client.close()
+        client.close();
     }
-    console.log("Adjacency matrix created!")
+    console.log("Adjacency matrix created!");
 
     // second stage of adjacency matrix creation
     // if a row has 1s, replace all 1s with 1 / number of 1s
     // if a row has no 1s, replace all elements with 1 / number of pages
-    let stage2AdjMat = []
+    let stage2AdjMat = [];
     for (let row of basicAdjMat) {
         // count the number of 1s in this row
-        let num1s = 0
+        let num1s = 0;
         for (let element of row) {
             if (element == 1) {
-                num1s += 1
+                num1s += 1;
             }
         }
 
-        let newRow = []
+        let newRow = [];
         // if there is no 1s, replace all entries with 1 / number of pages
         if (num1s == 0) {
             for (let element of row) {
-                newRow.push(1 / N)
+                newRow.push(1 / N);
             }
 
         // if there are 1s, replace all 1s with 1 / number of 1s
@@ -438,69 +429,69 @@ async function pageRank(collectionName) {
                 (element == 1) ? newRow.push(1 / num1s) : newRow.push(0)
             }
         }
-        stage2AdjMat.push(newRow)
+        stage2AdjMat.push(newRow);
     }
-    console.log("Stage 2 (row modification) complete!")
+    console.log("Stage 2 (row modification) complete!");
 
     // third stage of adjacency matrix creation
     // multiply adjacency matrix by (1 - alpha)
     // get values back into 2d array
-    let alpha = 0.1
-    let stage3AdjMatTemp = Matrix.mul(new Matrix(stage2AdjMat), (1 - alpha))
-    let stage3AdjMat = []
+    let alpha = 0.1;
+    let stage3AdjMatTemp = Matrix.mul(new Matrix(stage2AdjMat), (1 - alpha));
+    let stage3AdjMat = [];
     for (let i = 0; i < stage3AdjMatTemp.rows; i++) {
-        let newRow = []
+        let newRow = [];
         for (let j = 0; j < stage3AdjMatTemp.columns; j++) {
-            newRow.push(stage3AdjMatTemp.get(i, j))
+            newRow.push(stage3AdjMatTemp.get(i, j));
         }
-        stage3AdjMat.push(newRow)
+        stage3AdjMat.push(newRow);
     }
-    console.log("Stage 3 (matrix multiplication by 1 - alpha) complete!")
+    console.log("Stage 3 (matrix multiplication by 1 - alpha) complete!");
 
     // fourth stage of adjacency matrix creation
     // add (alpha / N) to each element of the adjacency matrix
-    let stage4AdjMat = []
+    let stage4AdjMat = [];
     for (let row of stage3AdjMat) {
-        let newRow = []
+        let newRow = [];
         for (let element of row) {
-            newRow.push(element + (alpha / N))
+            newRow.push(element + (alpha / N));
         }
-        stage4AdjMat.push(newRow)
+        stage4AdjMat.push(newRow);
     }
-    console.log("Stage 4 (element addition by alpha / numPages) complete!")
+    console.log("Stage 4 (element addition by alpha / numPages) complete!");
 
     // create initial page rank vector 
-    let x0 = []
+    let x0 = [];
     for (let row in stage4AdjMat) {
-        x0.push(0)
+        x0.push(0);
     }
-    x0[0] = 1
+    x0[0] = 1;
 
     // create initial matrices
-    let probMatrix = new Matrix(stage4AdjMat)
-    let prMatrix = new Matrix([x0])
-    let prMatrix_old = prMatrix
-    prMatrix = prMatrix.mmul(probMatrix)
+    let probMatrix = new Matrix(stage4AdjMat);
+    let prMatrix = new Matrix([x0]);
+    let prMatrix_old = prMatrix;
+    prMatrix = prMatrix.mmul(probMatrix);
 
     // iteratively create page rank matrix
     while (euclidean(prMatrix_old, prMatrix) >= 0.0001) {
-        prMatrix_old = prMatrix
-        prMatrix = prMatrix.mmul(probMatrix)
-    }
-    console.log("Stage 5 (power iteration) complete!")
+        prMatrix_old = prMatrix;
+        prMatrix = prMatrix.mmul(probMatrix);
+    };
+    console.log("Stage 5 (power iteration) complete!");
 
     // grab PageRank values
-    let pageRanks = []
+    let pageRanks = [];
     for (let i = 0; i < prMatrix.columns; i++) {
-        pageRanks.push(prMatrix.get(0, i))
-    }
+        pageRanks.push(prMatrix.get(0, i));
+    };
 
     // combine PageRanks and urls then sort
-    let pageRanksUrls = []
+    let pageRanksUrls = [];
     pageRanks.forEach((rank, index) => {
-        pageRanksUrls.push([rank, urlsInOrder[index]])
-    })
-    pageRanksUrls.sort(function(a, b) {return a[0] - b[0]}).reverse()
+        pageRanksUrls.push([rank, urlsInOrder[index]]);
+    });
+    pageRanksUrls.sort(function(a, b) {return a[0] - b[0]}).reverse();
 
     // print sorted page ranks
     // console.log("25 highest PageRank values:")
@@ -508,28 +499,27 @@ async function pageRank(collectionName) {
     //     console.log("#" + (i+1) + ". (" + pageRanksUrls[i][0].toFixed(16) + ") " + pageRanksUrls[i][1])
     // }
 
-    return pageRanksUrls
+    return pageRanksUrls;
 }
 
 // add the pageRank value for each page to their entities in the database
 async function addPageRanksToDb(pageRanks, collectionName) {
     // connect to the database
-    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true}) 
-
+    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
 
     try {
-        const pageRanksArray = await pageRanks
+        const pageRanksArray = await pageRanks;
 
         await client.connect();
-        const db = client.db('crawlerLoot')
+        const db = client.db('crawlerLoot');
 
         // set the pageRank attribute of each entity
-        for (rank of pageRanksArray) {
+        for (let rank of pageRanksArray) {
             await db.collection(collectionName).updateOne({url: rank[1]}, {$set: {pageRank: rank[0]}});
         }
 
     } finally {
-        client.close()
+        client.close();
     }
 }
 
@@ -543,7 +533,7 @@ function emptyDatabase() {
             db.collection('fruits').deleteMany({});
             db.collection('personal').deleteMany({});
         } catch (err) {
-            console.error('Error querying MongoDB: ', err)
+            console.error('Error querying MongoDB: ', err);
         }
     });
 }
@@ -551,56 +541,57 @@ function emptyDatabase() {
 // create elasticlunr index by collection name
 async function addPagesToIndex(collectionName) {
     // create index
-    index = elasticlunr(function () {
-        this.addField('title')
-        this.addField('body')
-        this.setRef('url')
-    })
+    let index = elasticlunr(function () {
+        this.addField('title');
+        this.addField('body');
+        this.setRef('url');
+    });
 
     // connect to database
-    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true})
+    const client = new mc("mongodb://127.0.0.1:27017/", {useUnifiedTopology: true});
     try {
-        await client.connect()
+        await client.connect();
         let db = client.db('crawlerLoot');
 
         // get all entities from collection
-        const result = await db.collection(collectionName).find({}, {url: 1, title: 1, body: 1, _id: 0}).toArray()
+        const result = await db.collection(collectionName).find({}, {url: 1, title: 1, body: 1, _id: 0}).toArray();
 
         // add each page to index
-        for (page of result) {
-            index.addDoc(page)
+        for (let page of result) {
+            index.addDoc(page);
         }
     } finally {
-        client.close()
+        client.close();
     }
 
-    return index
+    return index;
 }
 
 async function main() {
     try {
-        fruitsIndex = await addPagesToIndex("fruits")
-        personalIndex = await addPagesToIndex("personal")
+        fruitsIndex = await addPagesToIndex("fruits");
+        personalIndex = await addPagesToIndex("personal");
 
-        fruitsPageRanksUrls = await pageRank("fruits")
-        personalPageRanksUrls = await pageRank("personal")
+        fruitsPageRanksUrls = await pageRank("fruits");
+        personalPageRanksUrls = await pageRank("personal");
 
-        addPageRanksToDb(fruitsPageRanksUrls, "fruits")
-        addPageRanksToDb(personalPageRanksUrls, "personal")
+        addPageRanksToDb(fruitsPageRanksUrls, "fruits");
+        addPageRanksToDb(personalPageRanksUrls, "personal");
     } finally {
         app.listen(3000);
         console.log("Server listening at http://localhost:3000");
 
         // only do this on instance
-        if (false) {
+        const hostAxios = false;
+        if (hostAxios) {
             axios.put(
                 "http://134.117.130.17:3000/searchengines",
                 JSON.stringify({request_url: "http://134.117.131.137:3000"}),
                 {headers: {"content-type": "application/json"}}
-            ).then(r => console.log(r.status)).catch(e => console.log(e))
+            ).then(r => console.log(r.status)).catch(e => console.log(e));
         }
     }
 }
 
 // emptyDatabase();
-main()
+main();
