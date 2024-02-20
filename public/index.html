@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <title>Products App</title>
+        <link rel="stylesheet" type="text/css" href="app.css">
+    </head>
+    <body>
+        <h2>Pat and Aiden's BIG Search Machine</h2>
+        <div id="formBody">
+            
+            <br>
+            <div class="dataSetForm">
+                <h3>Search Set:</h3>
+                <label for="slider">Personal</label>
+                <input type="range" min="0" max="1" class="slider" id="dataSet">
+                <label for="slider">Fruits</label>
+            </div>
+            <br>
+            
+            <h3>Search Query:</h3>
+            <input type="text" id="query" name="query" value='apple'>
+            <br>
+
+            <label for="boost">Boost: </label>
+            <input type="checkbox" id="boost" name="boost" value="boost">
+            <br>
+
+            <label for="limit">Limit:</label>
+            <input type="text" id="limit" name="limit" value='10' size="1">
+            <br>
+
+            <button onclick="search()">Perform Search</button>
+        </div>
+
+        <div id="searchResults"></div>
+
+        <script src="client.js"></script>
+    </body>
+</html>
+
+
